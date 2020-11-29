@@ -1,0 +1,536 @@
+import 'package:cerebro_smart_parking/controller/bookings_controller.dart';
+import 'package:cerebro_smart_parking/controller/user_controller.dart';
+import 'package:cerebro_smart_parking/shared/size_config.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+class MapsPage extends StatefulWidget {
+  @override
+  _MapsPageState createState() => _MapsPageState();
+}
+
+class _MapsPageState extends State<MapsPage> {
+  BookingsController bookingsController = Get.put(BookingsController());
+  GoogleMapController mapController;
+
+  Set<Marker> markers = Set.from([]);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: LatLng(21.189, 72.855),
+            zoom: 15,
+          ),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
+          mapType: MapType.normal,
+          zoomControlsEnabled: false,
+          onTap: (pos) {
+            print(pos);
+          },
+        ),
+        Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: SizeConfig.safeBlockHorizontal * 35,
+            vertical: SizeConfig.safeBlockVertical * 20,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: SizeConfig.safeBlockHorizontal * 5,
+            vertical: SizeConfig.safeBlockVertical * 7,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+              SizeConfig.safeBlockVertical * 20,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.16),
+                offset: Offset(
+                  0,
+                  SizeConfig.safeBlockVertical * 3,
+                ),
+                blurRadius: SizeConfig.safeBlockVertical * 6,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: SizeConfig.safeBlockHorizontal * 10,
+                  ),
+                  child: TextField(
+                    style: TextStyle(
+                      fontSize: SizeConfig.safeBlockVertical * 20,
+                      color: Color(0xff222831),
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      contentPadding:
+                          EdgeInsets.only(bottom: 7, top: 11, right: 15),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  SizeConfig.safeBlockVertical * 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Color(0xff4688FF),
+                  borderRadius: BorderRadius.circular(
+                    SizeConfig.safeBlockVertical * 20,
+                  ),
+                ),
+                child: Icon(
+                  Ionicons.ios_search,
+                  color: Colors.white,
+                  size: SizeConfig.safeBlockVertical * 38,
+                ),
+              )
+            ],
+          ),
+        ),
+        FloatingActionButton(onPressed: () {
+          showBottomSheet(
+              backgroundColor: Colors.transparent,
+              context: context,
+              builder: (context) {
+                return BookingsBottomSheet();
+              });
+        }),
+      ],
+    );
+  }
+}
+
+class BookingsBottomSheet extends StatefulWidget {
+  @override
+  _BookingsBottomSheetState createState() => _BookingsBottomSheetState();
+}
+
+class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
+  BookingsController bookingsController = Get.find();
+  DateTime todayDate = DateTime.now();
+  DateTime selectedDate = DateTime.now();
+  TimeOfDay startTime = TimeOfDay.now();
+  TimeOfDay endTime = TimeOfDay.now();
+  int totalHoursParking = 0;
+  List<int> _price = [
+    0,
+    25,
+    50,
+    70,
+    90,
+    110,
+    130,
+    150,
+    170,
+    185,
+    200,
+    215,
+    230,
+    245,
+    260,
+    275,
+    290,
+    310,
+    325,
+    340,
+    355,
+    370,
+    385,
+    400,
+  ];
+  List<String> _months = [
+    "Months",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  Future<Null> _selectTodayDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: todayDate,
+        firstDate: todayDate,
+        lastDate: DateTime(2101));
+    if (picked != null && picked != todayDate)
+      setState(() {
+        selectedDate = picked;
+      });
+  }
+
+  Future<Null> _selectStartTime(BuildContext context) async {
+    final TimeOfDay picked = await showTimePicker(
+      context: context,
+      initialTime: startTime,
+    );
+    if (picked != null)
+      setState(() {
+        startTime = picked;
+
+        totalHoursParking =
+            calculateTotalParkingTime(end: endTime, start: startTime);
+      });
+  }
+
+  Future<Null> _selectEndTime(BuildContext context) async {
+    final TimeOfDay picked = await showTimePicker(
+      context: context,
+      initialTime: endTime,
+    );
+    if (picked != null)
+      setState(() {
+        endTime = picked;
+        totalHoursParking =
+            calculateTotalParkingTime(end: endTime, start: startTime);
+      });
+  }
+
+  int calculateTotalParkingTime({TimeOfDay end, TimeOfDay start}) {
+    double _doubleYourTime = end.hour.toDouble() + (end.minute.toDouble() / 60);
+    double _doubleNowTime =
+        start.hour.toDouble() + (start.minute.toDouble() / 60);
+
+    double _timeDiff = _doubleYourTime - _doubleNowTime;
+
+    int _hr = _timeDiff.truncate();
+    int _minute = ((_timeDiff - _timeDiff.truncate()) * 60).truncate();
+
+    print('Here your Happy $_hr Hour and also $_minute min');
+    if (_minute > 30) {
+      if (_hr < 0) {
+        _hr *= -1;
+        return _hr;
+      } else {
+        return _hr;
+      }
+    } else {
+      if (_hr < 0) {
+        _hr *= -1;
+        return ++_hr;
+      } else {
+        return ++_hr;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: SizeConfig.safeBlockVertical * 20,
+        horizontal: SizeConfig.safeBlockHorizontal * 20,
+      ),
+      width: double.maxFinite,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(
+            SizeConfig.safeBlockVertical * 55,
+          ),
+          topRight: Radius.circular(
+            SizeConfig.safeBlockVertical * 55,
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            color: Color(0xffA2C3FF),
+            height: SizeConfig.safeBlockVertical * 5,
+            width: SizeConfig.safeBlockHorizontal * 50,
+          ),
+          SizedBox(
+            height: SizeConfig.safeBlockVertical * 20,
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "VR Mall",
+              style: TextStyle(
+                fontSize: SizeConfig.safeBlockVertical * 40,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_rounded,
+                color: Color(0xffADAAAA),
+                size: SizeConfig.safeBlockVertical * 20,
+              ),
+              Text(
+                "University Road, Surat",
+                style: TextStyle(
+                  color: Color(0xffADAAAA),
+                  fontSize: SizeConfig.safeBlockVertical * 20,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: SizeConfig.safeBlockVertical * 15,
+          ),
+          Row(
+            children: [
+              Container(
+                margin: EdgeInsets.only(
+                  right: SizeConfig.safeBlockHorizontal * 8,
+                ),
+                padding: EdgeInsets.all(
+                  SizeConfig.safeBlockVertical * 3,
+                ),
+                color: Color(0xff68C3FF),
+                child: Icon(
+                  Icons.local_parking_outlined,
+                  size: SizeConfig.safeBlockVertical * 30,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                "18 Spots Available",
+                style: TextStyle(
+                  color: Color(0xff6EFF00),
+                  fontSize: SizeConfig.safeBlockVertical * 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: SizeConfig.safeBlockVertical * 10,
+          ),
+          Row(
+            children: [
+              Icon(
+                Ionicons.ios_videocam,
+                color: Color(0xffFFB554),
+                size: SizeConfig.safeBlockVertical * 40,
+              ),
+              SizedBox(
+                width: SizeConfig.safeBlockHorizontal * 20,
+              ),
+              Icon(
+                FontAwesome.wheelchair,
+                color: Color(0xffFF4D4D),
+                size: SizeConfig.safeBlockVertical * 30,
+              )
+            ],
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectTodayDate(context);
+            },
+            child: Container(
+              margin: EdgeInsets.symmetric(
+                vertical: SizeConfig.safeBlockVertical * 20,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: SizeConfig.safeBlockHorizontal * 15,
+                vertical: SizeConfig.safeBlockVertical * 10,
+              ),
+              decoration: BoxDecoration(
+                borderRadius:
+                    BorderRadius.circular(SizeConfig.safeBlockVertical * 15),
+                border: Border.all(
+                  color: Color(0xff707070),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    "${selectedDate.day} ${_months[selectedDate.month]} ${selectedDate.year}",
+                    style: TextStyle(
+                        color: Color(0xff222831),
+                        fontSize: SizeConfig.safeBlockVertical * 22,
+                        fontWeight: FontWeight.w100),
+                  ),
+                  Spacer(),
+                  Icon(FontAwesome.calendar_o),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    _selectStartTime(context);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: SizeConfig.safeBlockHorizontal * 15,
+                      vertical: SizeConfig.safeBlockVertical * 10,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                          SizeConfig.safeBlockVertical * 15),
+                      border: Border.all(
+                        color: Color(0xff707070),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "${startTime.format(context)}",
+                        style: TextStyle(
+                          color: Color(0xff222831),
+                          fontSize: SizeConfig.safeBlockVertical * 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: SizeConfig.safeBlockHorizontal * 7,
+              ),
+              Text(
+                "-",
+                style: TextStyle(
+                  fontSize: SizeConfig.safeBlockVertical * 40,
+                ),
+              ),
+              SizedBox(
+                width: SizeConfig.safeBlockHorizontal * 7,
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    _selectEndTime(context);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: SizeConfig.safeBlockHorizontal * 15,
+                      vertical: SizeConfig.safeBlockVertical * 10,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                          SizeConfig.safeBlockVertical * 15),
+                      border: Border.all(
+                        color: Color(0xff707070),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "${endTime.format(context)}",
+                        style: TextStyle(
+                          color: Color(0xff222831),
+                          fontSize: SizeConfig.safeBlockVertical * 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: SizeConfig.safeBlockVertical * 15,
+          ),
+          // Container(
+          //   width: SizeConfig.safeBlockHorizontal * 412,
+          //   height: 60,
+          //   child: ListView.builder(
+          //       scrollDirection: Axis.horizontal,
+          //       itemCount: 4,
+          //       itemBuilder: (context, index) {
+          //         return Container(
+          //           height: SizeConfig.safeBlockVertical * 60,
+          //           width: SizeConfig.safeBlockHorizontal * 100,
+          //           margin: EdgeInsets.symmetric(
+          //             horizontal: SizeConfig.safeBlockHorizontal * 10,
+          //           ),
+          //           decoration: BoxDecoration(
+          //               border: Border.all(
+          //             color: Color(0xff222831),
+          //           )),
+          //           child: Column(
+          //             children: [Text("1 Hour")],
+          //           ),
+          //         );
+          //       }),
+          // ),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Parking Payment",
+              style: TextStyle(
+                fontSize: SizeConfig.safeBlockVertical * 20,
+                color: Color(0xff222831),
+                fontWeight: FontWeight.w100,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              bookingsController.booking.value.location = "VR Mall";
+              bookingsController.booking.value.address =
+                  "University Road, Surat";
+              bookingsController.booking.value.date = selectedDate;
+              bookingsController.booking.value.endTime =
+                  endTime.format(context);
+              bookingsController.booking.value.price =
+                  _price[totalHoursParking];
+              bookingsController.booking.value.uid =
+                  Get.find<UserController>().uid.value;
+              bookingsController.booking.value.startTime =
+                  startTime.format(context);
+              bookingsController.booking.value.totalHours = totalHoursParking;
+              bookingsController.createBooking();
+              Get.back();
+            },
+            child: Container(
+              width: double.maxFinite,
+              decoration: BoxDecoration(
+                color: Color(0xff4688FF),
+                borderRadius: BorderRadius.circular(
+                  SizeConfig.safeBlockVertical * 20,
+                ),
+              ),
+              margin: EdgeInsets.symmetric(
+                vertical: SizeConfig.safeBlockVertical * 10,
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: SizeConfig.safeBlockVertical * 15,
+                horizontal: SizeConfig.safeBlockHorizontal * 22,
+              ),
+              child: Center(
+                child: Text(
+                  "Book For ₹${_price[totalHoursParking]}",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: SizeConfig.safeBlockVertical * 22,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
