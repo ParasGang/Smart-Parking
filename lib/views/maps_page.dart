@@ -14,11 +14,29 @@ class MapsPage extends StatefulWidget {
 class _MapsPageState extends State<MapsPage> {
   BookingsController bookingsController = Get.put(BookingsController());
   GoogleMapController mapController;
+  BitmapDescriptor customIcon;
+  Set<Marker> markers;
+  @override
+  void initState() {
+    super.initState();
+    markers = Set.from([]);
+  }
 
-  Set<Marker> markers = Set.from([]);
+  createMarker(context) {
+    if (customIcon == null) {
+      ImageConfiguration configuration = createLocalImageConfiguration(context);
+      BitmapDescriptor.fromAssetImage(configuration, 'assets/car1.png')
+          .then((icon) {
+        setState(() {
+          customIcon = icon;
+        });
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    createMarker(context);
     return Stack(
       children: [
         GoogleMap(
@@ -27,11 +45,19 @@ class _MapsPageState extends State<MapsPage> {
             zoom: 15,
           ),
           myLocationEnabled: true,
-          myLocationButtonEnabled: true,
+          markers: markers,
           mapType: MapType.normal,
           zoomControlsEnabled: false,
           onTap: (pos) {
             print(pos);
+            Marker m = Marker(
+                markerId: MarkerId('1'),
+                icon: customIcon,
+                position: pos,
+                zIndex: 20.0);
+            setState(() {
+              markers.add(m);
+            });
           },
         ),
         Container(
@@ -128,7 +154,7 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
   TimeOfDay endTime = TimeOfDay.now();
   int totalHoursParking = 0;
   List<int> _price = [
-    0,
+    20,
     25,
     50,
     70,
@@ -182,23 +208,33 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
 
   Future<Null> _selectStartTime(BuildContext context) async {
     final TimeOfDay picked = await showTimePicker(
-      context: context,
-      initialTime: startTime,
-    );
+        context: context,
+        initialTime: startTime,
+        builder: (BuildContext context, Widget child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child,
+          );
+        });
     if (picked != null)
       setState(() {
         startTime = picked;
-
         totalHoursParking =
             calculateTotalParkingTime(end: endTime, start: startTime);
+        print(totalHoursParking);
       });
   }
 
   Future<Null> _selectEndTime(BuildContext context) async {
     final TimeOfDay picked = await showTimePicker(
-      context: context,
-      initialTime: endTime,
-    );
+        context: context,
+        initialTime: endTime,
+        builder: (BuildContext context, Widget child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child,
+          );
+        });
     if (picked != null)
       setState(() {
         endTime = picked;
@@ -218,11 +254,12 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
     int _minute = ((_timeDiff - _timeDiff.truncate()) * 60).truncate();
 
     print('Here your Happy $_hr Hour and also $_minute min');
-    if (_minute > 30) {
+    if (_minute < 30) {
       if (_hr < 0) {
         _hr *= -1;
         return _hr;
       } else {
+        print(_hr);
         return _hr;
       }
     } else {
@@ -500,6 +537,11 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
               bookingsController.booking.value.startTime =
                   startTime.format(context);
               bookingsController.booking.value.totalHours = totalHoursParking;
+              bookingsController.booking.value.locationid = 1;
+              bookingsController.booking.value.year = selectedDate.year;
+              bookingsController.booking.value.date1 = selectedDate.day;
+              bookingsController.booking.value.month =
+                  _months[selectedDate.month];
               bookingsController.createBooking();
               Get.back();
             },

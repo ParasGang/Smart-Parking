@@ -18,6 +18,10 @@ class BookingsController extends GetxController {
           'location': booking.value.location,
           'address': booking.value.address,
           'price': booking.value.price,
+          'locationId': booking.value.locationid,
+          'month': booking.value.month,
+          'year': booking.value.year,
+          'date1': booking.value.date1,
         })
         .then((value) => print("New Booking Created"))
         .catchError((e) => print("Failed to create booking: $e"));

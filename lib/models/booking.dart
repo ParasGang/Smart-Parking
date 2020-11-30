@@ -9,6 +9,10 @@ class Booking {
   String location;
   String address;
   int price;
+  int locationid;
+  int date1;
+  String month;
+  int year;
   Booking(
       {this.uid,
       this.date,
@@ -17,5 +21,9 @@ class Booking {
       this.location,
       this.price,
       this.startTime,
-      this.totalHours});
+      this.totalHours,
+      this.locationid,
+      this.date1,
+      this.month,
+      this.year});
 }
