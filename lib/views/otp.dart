@@ -1,3 +1,5 @@
+import 'package:cerebro_smart_parking/main.dart';
+import 'package:cerebro_smart_parking/views/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -16,9 +18,10 @@ class _OtpVerificationState extends State<OtpVerification> {
     print(otp);
     await FirebaseAuth.instance
         .signInWithCredential(PhoneAuthProvider.credential(
-      verificationId: widget.verificationId,
-      smsCode: oTP,
-    ));
+          verificationId: widget.verificationId,
+          smsCode: oTP,
+        ))
+        .then((value) => Get.offAll(MyApp()));
   }
 
   List otp = [];

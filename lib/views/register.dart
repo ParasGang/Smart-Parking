@@ -148,6 +148,15 @@ class Register extends StatelessWidget {
                         ),
                         Expanded(
                           child: TextFormField(
+                            validator: (val) {
+                              Pattern pattern =
+                                  r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                              RegExp regex = new RegExp(pattern);
+                              if (!regex.hasMatch(val))
+                                return 'Enter Valid Email';
+                              else
+                                return null;
+                            },
                             controller: _email,
                             style: TextStyle(
                               fontSize: SizeConfig.safeBlockVertical * 20,

@@ -17,7 +17,6 @@ class HomePage extends StatelessWidget {
     return SafeArea(
       child: Obx(
         () => Scaffold(
-          
           resizeToAvoidBottomInset: false,
           body: Stack(
             children: [

@@ -36,8 +36,7 @@ class MyApp extends StatelessWidget {
             } else if (userSnapshot.hasError) {
               return CircularProgressIndicator();
             }
-            return HomePage();
-            Login();
+            return Login();
           },
         ));
   }

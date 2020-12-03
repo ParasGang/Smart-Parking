@@ -13,6 +13,8 @@ class Booking {
   int date1;
   String month;
   int year;
+  int start; //Truncated value for preebooking
+  int end; //Truncated value for prebooking
   Booking(
       {this.uid,
       this.date,
@@ -25,5 +27,7 @@ class Booking {
       this.locationid,
       this.date1,
       this.month,
-      this.year});
+      this.year,
+      this.start,
+      this.end});
 }

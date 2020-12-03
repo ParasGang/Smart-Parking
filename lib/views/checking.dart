@@ -14,6 +14,13 @@ class _CheckingState extends State<Checking> {
   UserController userController = Get.put(UserController());
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    userController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Obx(() {
       return userController.loading.value == true
@@ -22,7 +29,7 @@ class _CheckingState extends State<Checking> {
                 child: CircularProgressIndicator(),
               ),
             )
-          : userController.registered == true
+          : userController.registered.value == true
               ? HomePage()
               : Register();
     });

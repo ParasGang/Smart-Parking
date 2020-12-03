@@ -176,6 +176,15 @@ class AddVehicle extends StatelessWidget {
                       ),
                       Expanded(
                         child: TextFormField(
+                          validator: (val) {
+                            Pattern pattern =
+                                r'^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{1,4}$';
+                            RegExp regex = new RegExp(pattern);
+                            if (!regex.hasMatch(val))
+                              return 'Enter Valid Car Plate Number';
+                            else
+                              return null;
+                          },
                           controller: _liscence_number,
                           style: TextStyle(
                             fontSize: SizeConfig.safeBlockVertical * 20,
