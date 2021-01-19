@@ -240,8 +240,11 @@ class Register extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       UserController userController = Get.find();
-                      userController.changeName(_name.text);
-                      userController.changeEmail(_email.text);
+                      userController.name.value = _name.text;
+                      userController.email.value = _email.text;
+                      print(userController.name);
+                      print(userController.email);
+
                       Get.to(AddVehicle());
                     },
                     child: Container(

@@ -1,7 +1,9 @@
 import 'package:cerebro_smart_parking/controller/bookings_controller.dart';
 import 'package:cerebro_smart_parking/controller/parking_controller.dart';
+import 'package:cerebro_smart_parking/controller/payment_controller.dart';
 import 'package:cerebro_smart_parking/controller/user_controller.dart';
 import 'package:cerebro_smart_parking/shared/size_config.dart';
+import 'package:cerebro_smart_parking/views/add_payment_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -33,6 +35,7 @@ class _MapsPageState extends State<MapsPage> {
 
   @override
   void initState() {
+    print("otp value:- " + Get.find<UserController>().otp.value);
     super.initState();
     markers = Set.from([]);
     getCurrentLocation();
@@ -94,11 +97,11 @@ class _MapsPageState extends State<MapsPage> {
     return Stack(
       children: [
         GoogleMap(
-          myLocationButtonEnabled: false,
+          myLocationButtonEnabled: true,
           mapToolbarEnabled: false,
           initialCameraPosition: CameraPosition(
             target: LatLng(21.1896496, 72.858426),
-            zoom: 11,
+            zoom: 8,
           ),
           myLocationEnabled: true,
           markers: markers,
@@ -187,6 +190,7 @@ class BookingsBottomSheet extends StatefulWidget {
 }
 
 class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
+  PaymentController _paymentController = Get.put(PaymentController());
   BookingsController bookingsController = Get.find();
   DateTime todayDate = DateTime.now();
   DateTime selectedDate = DateTime.now();
@@ -310,6 +314,13 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
         return ++_hr;
       }
     }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _paymentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -580,7 +591,7 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       bookingsController.booking.value.location = "VR Mall";
                       bookingsController.booking.value.address =
                           "University Road, Surat";
@@ -601,9 +612,18 @@ class _BookingsBottomSheetState extends State<BookingsBottomSheet> {
                       bookingsController.booking.value.month =
                           _months[selectedDate.month];
                       bookingsController.booking.value.start = startTime.hour;
+
                       bookingsController.booking.value.end = endTime.hour;
-                      bookingsController.createBooking();
-                      Get.back();
+                      if (_paymentController.payment.value) {
+                        bookingsController.createBooking();
+
+                        Get.back();
+                        Get.snackbar("Booking", "Booking Confirmed");
+                      } else {
+                        await Get.to(AddPaymentDetails());
+                      }
+
+                      print("abcd");
                     },
                     child: Container(
                       width: double.maxFinite,

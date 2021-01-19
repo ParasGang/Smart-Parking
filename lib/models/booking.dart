@@ -13,6 +13,7 @@ class Booking {
   int date1;
   String month;
   int year;
+  bool gate;
   int start; //Truncated value for preebooking
   int end; //Truncated value for prebooking
   Booking(
@@ -29,5 +30,6 @@ class Booking {
       this.month,
       this.year,
       this.start,
-      this.end});
+      this.end,
+      this.gate});
 }

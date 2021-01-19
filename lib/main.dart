@@ -1,3 +1,5 @@
+import 'package:cerebro_smart_parking/controller/user_controller.dart';
+import 'package:cerebro_smart_parking/models/booking.dart';
 import 'package:cerebro_smart_parking/views/checking.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,7 +21,21 @@ void main() async {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  UserController userController = Get.put(UserController());
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    userController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(

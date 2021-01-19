@@ -51,8 +51,11 @@ class Bookings extends StatelessWidget {
                     return ListView(
                       children: item.map((e) {
                         return GestureDetector(
-                          onTap: () {
-                            Get.to(SingleBookingDetailsPage(e));
+                          onTap: () async {
+                            Get.to(SingleBookingDetailsPage(
+                              e: e,
+                              gate: e['gate'],
+                            ));
                           },
                           child: Container(
                             width: double.maxFinite,

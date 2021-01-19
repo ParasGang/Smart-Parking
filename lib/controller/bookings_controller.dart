@@ -24,6 +24,7 @@ class BookingsController extends GetxController {
           'date1': booking.value.date1,
           'start': booking.value.start,
           'end': booking.value.end,
+          'gate': false
         })
         .then((value) => print("New Booking Created"))
         .catchError((e) => print("Failed to create booking: $e"));

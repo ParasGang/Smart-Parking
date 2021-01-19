@@ -1,10 +1,13 @@
+import 'package:cerebro_smart_parking/controller/user_controller.dart';
 import 'package:cerebro_smart_parking/main.dart';
+import 'package:cerebro_smart_parking/views/checking.dart';
 import 'package:cerebro_smart_parking/views/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:cerebro_smart_parking/shared/size_config.dart';
 import 'package:get/get.dart';
+import 'package:sms_otp_auto_verify/sms_otp_auto_verify.dart';
 
 class OtpVerification extends StatefulWidget {
   final String verificationId;
@@ -21,10 +24,11 @@ class _OtpVerificationState extends State<OtpVerification> {
           verificationId: widget.verificationId,
           smsCode: oTP,
         ))
-        .then((value) => Get.offAll(MyApp()));
+        .then((value) => Get.offAll(Checking()));
   }
 
   List otp = [];
+  @override
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);

@@ -1,3 +1,4 @@
+import 'package:cerebro_smart_parking/controller/user_controller.dart';
 import 'package:cerebro_smart_parking/main.dart';
 import 'package:cerebro_smart_parking/views/checking.dart';
 import 'package:cerebro_smart_parking/views/home_page.dart';
@@ -9,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cerebro_smart_parking/services/phone_verification.dart';
 import 'package:cerebro_smart_parking/shared/size_config.dart';
 import 'package:cerebro_smart_parking/views/otp.dart';
+import 'package:sms_otp_auto_verify/sms_otp_auto_verify.dart';
 
 class Login extends StatelessWidget {
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -21,7 +23,10 @@ class Login extends StatelessWidget {
       timeout: const Duration(seconds: 60),
       verificationCompleted: (AuthCredential authCredential) async {
         print("Your account is successfully verified");
-        await FirebaseAuth.instance.signInWithCredential(authCredential);
+        print(authCredential.token);
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(authCredential);
+        Get.find<UserController>().uid.value = userCredential.user.uid;
         Get.offAll(Checking());
       },
       verificationFailed: (FirebaseAuthException authException) {
@@ -31,7 +36,7 @@ class Login extends StatelessWidget {
       codeSent: (String verId, [int forceCodeResent]) {
         verificationId = verId;
         print("OTP has been successfully send");
-
+        readOtp();
         Get.to(OtpVerification());
       },
       codeAutoRetrievalTimeout: (String verId) {
@@ -39,6 +44,11 @@ class Login extends StatelessWidget {
         print("Timeout");
       },
     );
+  }
+
+  void readOtp() async {
+    String otpa = await SmsRetrieved.startListeningSms();
+    Get.find<UserController>().otp.value = otpa;
   }
 
   TextEditingController _mobile = TextEditingController();

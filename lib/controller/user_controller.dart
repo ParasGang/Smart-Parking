@@ -13,15 +13,18 @@ class UserController extends GetxController {
   var loading = true.obs;
   var updateUserLoading = false.obs;
   var registered = false.obs;
+  var otp = "".obs;
 
   @override
   void onInit() async {
     User user = await FirebaseAuth.instance.currentUser;
-    print(user.uid);
-    uid.value = user.uid;
-    mobile.value = user.phoneNumber;
-    print(user.uid);
-    await getUserDetails();
+
+    if (!user.isNull) {
+      uid.value = user.uid;
+      mobile.value = user.phoneNumber;
+      print(user.uid);
+      await getUserDetails();
+    }
 
     loading.value = false;
     super.onInit();
@@ -45,6 +48,7 @@ class UserController extends GetxController {
   }
 
   registerUser() async {
+    print(uid.value);
     CollectionReference collectionReference =
         FirebaseFirestore.instance.collection("users");
     await collectionReference

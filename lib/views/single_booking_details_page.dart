@@ -4,14 +4,24 @@ import 'package:cerebro_smart_parking/controller/bottom_nav_bar_controller.dart'
 import 'package:cerebro_smart_parking/shared/size_config.dart';
 import 'package:cerebro_smart_parking/views/home_page.dart';
 import 'package:cerebro_smart_parking/views/maps_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:get/get.dart';
 
-class SingleBookingDetailsPage extends StatelessWidget {
-  final scaffoldState = GlobalKey<ScaffoldState>();
+class SingleBookingDetailsPage extends StatefulWidget {
   final e;
-  SingleBookingDetailsPage(this.e);
+
+  SingleBookingDetailsPage({this.e, this.gate});
+  bool gate;
+  @override
+  _SingleBookingDetailsPageState createState() =>
+      _SingleBookingDetailsPageState();
+}
+
+class _SingleBookingDetailsPageState extends State<SingleBookingDetailsPage> {
+  final scaffoldState = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -92,7 +102,7 @@ class SingleBookingDetailsPage extends StatelessWidget {
                 bottom: SizeConfig.safeBlockVertical * 5,
               ),
               child: Text(
-                "${e['location']}",
+                "${widget.e['location']}",
                 style: TextStyle(
                   color: Color(0xff222831),
                   fontSize: SizeConfig.safeBlockVertical * 40,
@@ -111,7 +121,7 @@ class SingleBookingDetailsPage extends StatelessWidget {
                     size: SizeConfig.safeBlockVertical * 25,
                   ),
                   Text(
-                    "${e['address']}",
+                    "${widget.e['address']}",
                     style: TextStyle(
                       color: Color(0xff707070),
                       fontSize: SizeConfig.safeBlockVertical * 20,
@@ -147,7 +157,7 @@ class SingleBookingDetailsPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "${e['startTime']}",
+                        "${widget.e['startTime']}",
                         style: TextStyle(
                           color: Color(0xffC8C8C8),
                           fontSize: SizeConfig.safeBlockHorizontal * 12,
@@ -177,7 +187,7 @@ class SingleBookingDetailsPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "${e['endTime']}",
+                        "${widget.e['endTime']}",
                         style: TextStyle(
                           color: Color(0xffC8C8C8),
                           fontSize: SizeConfig.safeBlockHorizontal * 12,
@@ -285,14 +295,32 @@ class SingleBookingDetailsPage extends StatelessWidget {
             ),
             Spacer(),
             GestureDetector(
-              onTap: () {
-                Get.find<BottomNavBarController>().page.value = 1;
-                Get.back();
+              onTap: () async {
+                if (widget.gate == false) {
+                  CollectionReference collectionReference =
+                      FirebaseFirestore.instance.collection("parkingGate");
+                  await collectionReference
+                      .doc("gate")
+                      .set({'gate_open': true})
+                      .then((value) => print("Gate Opened"))
+                      .catchError((e) => print("Failed to open gate: $e"));
+                  Get.snackbar("Parking Gate", "Parking Gate Opened",
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.grey);
+
+                  setState(() {
+                    widget.gate = true;
+                  });
+                } else {
+                  Get.snackbar("Parking Gate", "Parking Gate is Disabled",
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.grey);
+                }
               },
               child: Container(
                 width: double.maxFinite,
                 decoration: BoxDecoration(
-                  color: Color(0xff2185C8),
+                  color: widget.gate == true ? Colors.grey : Color(0xff2185C8),
                   borderRadius: BorderRadius.circular(
                     SizeConfig.safeBlockVertical * 20,
                   ),
@@ -307,7 +335,7 @@ class SingleBookingDetailsPage extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    "Rebook Parking",
+                    "Open Gate",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: SizeConfig.safeBlockVertical * 22,
